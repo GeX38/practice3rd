@@ -1,6 +1,6 @@
 #include <WiFi.h>
 #include <WebServer.h>
-#include <Servo.h>
+#include <ESP32Servo.h>
 #include "esp_camera.h"
 #include <SPIFFS.h>
 #include <ArduinoJson.h>
@@ -25,8 +25,8 @@ const int servoPin1 = 13;          // GPIO13 для первого дополн�
 const int servoPin2 = 12;          // GPIO12 для второго дополнительного сервопривода
 
 // Устанавливаем SSID и пароль для WiFi
-const char* ssid = "Pixel-3768";
-const char* password = "11112222";
+const char* ssid = "Pixel_3763";
+const char* password = "***********";
 
 // Параметры плода
 const int minSizeThreshold = 4400;  // Минимальное количество пикселей для принятия объекта
@@ -116,14 +116,19 @@ void setup() {
 
   if (psramFound()) {
     config.frame_size = FRAMESIZE_QVGA;
-    config.jpeg_quality = 10;
-    config.fb_count = 2;
+    config.jpeg_quality = 15;
+    config.fb_count = 1;
   } else {
     config.frame_size = FRAMESIZE_QVGA;
-    config.jpeg_quality = 12;
+    config.jpeg_quality = 15;
     config.fb_count = 1;
   }
-  
+  if(psramFound()){
+    config.fb_location = CAMERA_FB_IN_PSRAM; // Использовать PSRAM
+    config.grab_mode = CAMERA_GRAB_LATEST; // Минимизировать задержку
+} else {
+    Serial.println("PSRAM не найден.");
+}
   // Инициализация камеры
   if (esp_camera_init(&config) != ESP_OK) {
     Serial.println("Ошибка инициализации камеры");
@@ -349,6 +354,7 @@ void handleSlider2() {
 }
 
 void handleCapture() {
+  Serial.println("Attempting to capture image...");
   camera_fb_t * fb = esp_camera_fb_get();
   if (!fb) {
     Serial.println("Ошибка захвата изображения");
